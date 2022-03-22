@@ -38,6 +38,7 @@ using Setfield
 
 using ForwardDiff
 
+import FunctionWrappersWrappers
 @reexport using SciMLBase
 
 using SciMLBase: @def, DEIntegrator, DEProblem, AbstractDiffEqOperator,
@@ -127,6 +128,7 @@ include("forwarddiff.jl")
 include("chainrules.jl")
 
 include("precompile.jl")
+include("norecompile.jl")
 
 """
 $(TYPEDEF)
