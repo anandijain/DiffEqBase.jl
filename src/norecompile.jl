@@ -1,5 +1,6 @@
 struct OrdinaryDiffEqTag end
 
+#=
 const dualT = ForwardDiff.Dual{ForwardDiff.Tag{OrdinaryDiffEqTag,Float64},Float64,1}
 const arglists = (Tuple{Vector{Float64},Vector{Float64},Vector{Float64},Float64},
                   Tuple{Vector{Float64},Vector{Float64},SciMLBase.NullParameters,Float64},
@@ -8,54 +9,14 @@ const arglists = (Tuple{Vector{Float64},Vector{Float64},Vector{Float64},Float64}
                   Tuple{Vector{dualT},Vector{dualT},SciMLBase.NullParameters,Float64},
                   Tuple{Vector{dualT},Vector{Float64},SciMLBase.NullParameters,dualT})
 const returnlists = ntuple(x -> Nothing, length(arglists))
-function void(@nospecialize(f::Function)) 
-  function f2(@nospecialize(du::Vector{Float64}), @nospecialize(u::Vector{Float64}), @nospecialize(p::Vector{Float64}), @nospecialize(t::Float64))
-    f(du, u, p, t)
-    nothing
-  end
+=#
 
-  function f2(@nospecialize(du::Vector{Float64}), @nospecialize(u::Vector{Float64}), @nospecialize(p::SciMLBase.NullParameters), @nospecialize(t::Float64))
-    f(du, u, p, t)
-    nothing
-  end
-
-  function f2(@nospecialize(du::Vector{dualT}), @nospecialize(u::Vector{dualT}), @nospecialize(p::Vector{Float64}), @nospecialize(t::Float64))
-    f(du, u, p, t)
-    nothing
-  end
-
-  function f2(@nospecialize(du::Vector{dualT}), @nospecialize(u::Vector{dualT}), @nospecialize(p::SciMLBase.NullParameters), @nospecialize(t::Float64))
-    f(du, u, p, t)
-    nothing
-  end
-  
-  function f2(@nospecialize(du::Vector{dualT}), @nospecialize(u::Vector{Float64}), @nospecialize(p::Vector{Float64}), @nospecialize(t::dualT))
-    f(du, u, p, t)
-    nothing
-  end
-
-  function f2(@nospecialize(du::Vector{dualT}), @nospecialize(u::Vector{Float64}), @nospecialize(p::SciMLBase.NullParameters), @nospecialize(t::dualT))
-    f(du, u, p, t)
-    nothing
-  end
-  precompile(f, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Float64))
-  precompile(f, (Vector{Float64}, Vector{Float64}, SciMLBase.NullParameters, Float64))
-  precompile(f, (Vector{dualT}, Vector{dualT}, Vector{Float64}, Float64))
-  precompile(f, (Vector{dualT}, Vector{dualT}, SciMLBase.NullParameters, Float64))
-  precompile(f, (Vector{dualT}, Vector{Float64}, Vector{Float64}, dualT))
-  precompile(f, (Vector{dualT}, Vector{Float64}, SciMLBase.NullParameters, dualT))
-
-  precompile(f2, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Float64))
-  precompile(f2, (Vector{Float64}, Vector{Float64}, SciMLBase.NullParameters, Float64))
-  precompile(f2, (Vector{dualT}, Vector{dualT}, Vector{Float64}, Float64))
-  precompile(f2, (Vector{dualT}, Vector{dualT}, SciMLBase.NullParameters, Float64))
-  precompile(f2, (Vector{dualT}, Vector{Float64}, Vector{Float64}, dualT))
-  precompile(f2, (Vector{dualT}, Vector{Float64}, SciMLBase.NullParameters, dualT))
-  f2
+function void(f) 
+  Base.Experimental.@opaque (args...)->f(args...)
 end
 
-const NORECOMPILE_FUNCTION = typeof(FunctionWrappersWrappers.FunctionWrappersWrapper(void(() -> nothing), arglists, returnlists))
-wrap_norecompile(f) = FunctionWrappersWrappers.FunctionWrappersWrapper(void(f), arglists, returnlists)
+const NORECOMPILE_FUNCTION = typeof(void(() -> nothing))
+wrap_norecompile(f) = void(f)
 
 function ODEFunction{iip,false}(f;
   mass_matrix=I,
