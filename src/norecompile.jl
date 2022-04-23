@@ -15,7 +15,7 @@ function void(f)
   Base.Experimental.@opaque (args...)->f(args...)
 end
 
-const NORECOMPILE_FUNCTION = typeof(void(() -> nothing))
+const NORECOMPILE_FUNCTION = Core.OpaqueClosure{Tuple, Any}
 wrap_norecompile(f) = void(f)
 
 function ODEFunction{iip,false}(f;
