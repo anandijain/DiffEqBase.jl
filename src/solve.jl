@@ -1190,6 +1190,7 @@ function get_concrete_p(prob, kwargs)
     else
         p = prob.p
     end
+    handle_distribution_u0(p)
 end
 
 handle_distribution_u0(_u0) = _u0

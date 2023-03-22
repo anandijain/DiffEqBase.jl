@@ -22,6 +22,10 @@ prob2 = DiffEqBase.get_concrete_problem(prob, true)
 
 prob = ODEProblem((u, p, t) -> u, (p, t) -> Normal(p, 1), (0.0, 1.0), 1.0)
 prob2 = DiffEqBase.get_concrete_problem(prob, true)
+# @edit DiffEqBase.get_concrete_problem(prob, true)
+# DiffEqBase.get_concrete_problem(prob, true)
+# Debugger.@enter DiffEqBase.get_concrete_problem(prob, true)
+# these fail now
 @test typeof(prob2.u0) == Float64
 
 kwargs(; kw...) = kw
@@ -44,3 +48,33 @@ prob2 = DiffEqBase.get_concrete_problem(prob, true)
 @test prob2.u0 == 2.0
 @test prob2.tspan == (0.0, 3.0)
 @test prob2.constant_lags == [1.0]
+
+# 
+function f(du, u, p, t)
+    du[1] = -p[1] * u[1]
+    du[2] = -p[2] * u[2]
+end
+
+dist = Uniform(0, 1)
+tspan = (0, 1)
+prob = ODEProblem(f, [dist, 0.5], tspan, [dist, 3])
+prob2 = DiffEqBase.get_concrete_problem(prob, true)
+sol = solve(prob)
+
+# honestly this is pretty confusing. 
+# if we made it so that you provide distributions in defaults for sys and the ODEProblem(sys) construction concretizes, that could make a bit more sense
+@test prob.p[1] isa Distributions.Sampleable
+@test prob.u0[1] isa Distributions.Sampleable
+@test sol.prob.p[1] isa Number
+@test sol.prob.u0[1] isa Number
+
+ds = [dist, Dirac(0.5)]
+pd = product_distribution(ds)
+rand(pd)
+
+prob2 = ODEProblem(f, pd, tspan, pd)
+sol2 = solve(prob2)
+@test prob2.p isa Distributions.Sampleable
+@test prob2.u0 isa Distributions.Sampleable
+@test sol2.prob.p[1] isa Number
+@test sol2.prob.u0[1] isa Number
